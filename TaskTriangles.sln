@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskTriangles", "TaskTriangles\TaskTriangles.csproj", "{C8F2C3B1-3D64-4613-B759-F7606CF9770E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8F2C3B1-3D64-4613-B759-F7606CF9770E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8F2C3B1-3D64-4613-B759-F7606CF9770E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8F2C3B1-3D64-4613-B759-F7606CF9770E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8F2C3B1-3D64-4613-B759-F7606CF9770E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0538CAAA-1C35-4962-9FCE-921D1BB4CB91}
+	EndGlobalSection
+EndGlobal
