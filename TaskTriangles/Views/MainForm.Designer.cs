@@ -1,6 +1,8 @@
-﻿namespace TaskTriangles.Views
+﻿using System.IO;
+
+namespace TaskTriangles.Views
 {
-    partial class MainWindow
+    partial class MainForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -37,13 +39,14 @@
             this.fileSystemWatcher1.EnableRaisingEvents = true;
             this.fileSystemWatcher1.SynchronizingObject = this;
             // 
-            // MainWindow
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Name = "MainWindow";
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(1382, 1353);
+            this.Name = "MainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "TaskTriangles";
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.MainWindow_Paint);
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();
             this.ResumeLayout(false);
