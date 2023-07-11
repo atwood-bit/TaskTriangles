@@ -53,6 +53,7 @@ namespace TaskTriangles
             services.AddScoped<MainViewModel>();
             services.AddTransient<IFigureService, FigureService>();
             services.AddTransient<IInputFileValidator, InputFileValidator>();
+            services.AddTransient<ICoordinatesValidator, CoordinatesValidator>();
         }
     }
 }

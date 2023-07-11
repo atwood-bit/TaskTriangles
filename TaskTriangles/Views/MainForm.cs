@@ -1,132 +1,97 @@
+using System.Collections.Immutable;
+using System.Collections.Specialized;
 using TaskTriangles.Extensions;
+using TaskTriangles.Models;
 using TaskTriangles.ViewModels;
 
 namespace TaskTriangles.Views
 {
     public partial class MainForm : Form
     {
-        private List<Point[]> _points = new();
+        private readonly RangeObservableCollection<Triangle> _triangles = new();
+        private Panel? _drawPanel;
+        private string _color;
+        private const KnownColor _defaultColor = KnownColor.MediumAquamarine;
+        //private readonly ImmutableDictionary<int, double> _transparencyByLevel = new ImmutableDictionary<int, double>();
 
         public MainForm(MainViewModel mainViewModel)
         {
             InitializeComponent();
+
+            mainViewModel.AddItemsToViewCollection = _triangles.AddRange;
+            mainViewModel.ShowErrorMessage = ShowError;
+            //mainViewModel.AddTransparencies = _transparencyByLevel.AddRange;
             DataContext = mainViewModel;
-            CreateControls();
-            // test
-            _points = GetPoints();
+            _color = string.Empty;
 
+            CreateInputPanel();
+            CreateDrawPanel();
+
+            _triangles.CollectionChanged += PointsCollectionChanged;
         }
 
-        // todo: test
-        private List<Point[]> GetPoints()
+        private void DrawPanel_Paint(object? sender, PaintEventArgs e)
         {
-            var points = new Point[3]
+            if (!_triangles.Any())
             {
-                new Point { X = 90, Y = 30 },
-                new Point { X = 90, Y = 40 },
-                new Point { X = 80, Y = 40 },
-            };
-            var points2 = new Point[3]
-            {
-                new Point { X = 150, Y = 130 },
-                new Point { X = 0, Y = 90 },
-                new Point { X = 100, Y = 0 },
-            };
-            var points3 = new Point[3]
-            {
-                new Point { X = 20, Y = 80 },
-                new Point { X = 80, Y = 70 },
-                new Point { X = 50, Y = 100 },
-            };
-            var points4 = new Point[3]
-            {
-                new Point { X = 60, Y = 100 },
-                new Point { X = 120, Y = 80 },
-                new Point { X = 140, Y = 120 },
-            };
-            var points5 = new Point[3]
-            {
-                new Point { X = 100, Y = 100 },
-                new Point { X = 120, Y = 100 },
-                new Point { X = 120, Y = 90 },
-            };
-            var points6 = new Point[3]
-            {
-                new Point { X = 30, Y = 70 },
-                new Point { X = 100, Y = 10 },
-                new Point { X = 110, Y = 60 },
-            };
-            var points7 = new Point[3]
-            {
-                new Point { X = 60, Y = 50 },
-                new Point { X = 60, Y = 60 },
-                new Point { X = 90, Y = 60 },
-            };
-            var points8 = new Point[3]
-            {
-                new Point { X = 100, Y = 20 },
-                new Point { X = 100, Y = 50 },
-                new Point { X = 70, Y = 40 },
-            };
+                return;
+            }
 
-            return new List<Point[]>
+            var knownColor = Enum.GetValues<KnownColor>().Cast<KnownColor>().FirstOrDefault(x => x.ToString().Equals(_color), _defaultColor);
+            var color = Color.FromKnownColor(knownColor);
+
+            BackColor = color.ChangeColorBrightness(0.9);
+            foreach (var triangle in _triangles)
             {
-                points, points2, points3, points4, points5, points6, points7, points8
-            };
+                //_transparencyByLevel.TryGetValue(triangle.DepthLevel.Value, out var transparency);
+                e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), 0); // todo
+            }
         }
 
-        private void MainWindow_Paint(object sender, PaintEventArgs e)
+        private void PointsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            var paintPanel = new Panel
-            {
-                Padding = new Padding(100),
-                Width = 1000,
-                Height = 1000,
-                Dock = DockStyle.Fill,
-                Location = new Point(0, 200),
-            };
-
-
-            Controls.Add(paintPanel);
-
-            Graphics g = paintPanel.CreateGraphics();
-
-            g.FillTriangle(_points[0], Color.Green, 5 / 100.0);
-            g.FillTriangle(_points[1], Color.GreenYellow, 5 / 100.0);
-            g.FillTriangle(_points[2], Color.DarkGreen, 5 / 100.0);
-            g.FillTriangle(_points[3], Color.Red, 5 / 100.0);
-            g.FillTriangle(_points[4], Color.Purple, 5 / 100.0);
-            g.FillTriangle(_points[5], Color.SeaGreen, 5 / 100.0);
-            g.FillTriangle(_points[6], Color.Brown, 5 / 100.0);
-            g.FillTriangle(_points[7], Color.Pink, 5 / 100.0);
+            _drawPanel?.Invalidate();
         }
 
-        private void CreateControls()
+        private void ComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            _color = comboBox?.SelectedItem?.ToString();
+        }
+
+        private void CreateInputPanel()
         {
             var inputPanel = new Panel
             {
-                Padding = new Padding(10),
-                Width = 600,
-                Height = 200,
-                Dock = DockStyle.Left,
-                Location = new Point(500, 500)
+                Width = 1000,
+                Height = 220,
+                Dock = DockStyle.Top,
+                Location = new Point(10, 10),
+                BackColor = Color.Bisque
             };
 
             inputPanel.Controls.Add(CreateFilePathTextBox());
             inputPanel.Controls.AddRange(CreateLabels());
+
+            inputPanel.Controls.Add(CreateColorComboBox());
             inputPanel.Controls.Add(CreateDrawButton());
 
-            //var paintPanel = new Panel
-            //{
-            //    Padding = new Padding(20),
-            //    Width = 1000,
-            //    Height = 1000,
-            //    Dock = DockStyle.Fill,
-            //    Location = new Point(0, 200),
-            //};
-
             Controls.Add(inputPanel);
-            //Controls.Add(paintPanel);
+        }
+
+        private void CreateDrawPanel()
+        {
+            var drawPanel = new Panel
+            {
+                Padding = new Padding(10),
+                Width = 1000,
+                Height = 1000,
+                Location = new Point(10, 220),
+            };
+
+            drawPanel.Paint += new PaintEventHandler(DrawPanel_Paint);
+            _drawPanel = drawPanel;
+            Controls.Add(drawPanel);
         }
 
         private Label[] CreateLabels()
@@ -145,7 +110,14 @@ namespace TaskTriangles.Views
             };
             warningMessageLabel.DataBindings.Add(new Binding(nameof(Label.Text), DataContext, nameof(MainViewModel.WarningMessage), true, DataSourceUpdateMode.OnPropertyChanged));
 
-            return new Label[] { resultMessageLabel, warningMessageLabel };
+            var selectColorLabel = new Label
+            {
+                Location = new Point(10, 100),
+                AutoSize = true,
+                Text = "Select color"
+            };
+
+            return new Label[] { resultMessageLabel, warningMessageLabel, selectColorLabel };
         }
 
         private Button CreateDrawButton()
@@ -154,14 +126,32 @@ namespace TaskTriangles.Views
             {
                 Text = "Draw Triangles",
                 AutoSize = true,
-                Location = new Point(10, 110)
+                Location = new Point(10, 140)
             };
 
+            drawTrianglesBtn.Click += (s, e) =>
+            {
+                _triangles.Clear();
+                //_transparencyByLevel.Clear();
+            };
             drawTrianglesBtn.DataBindings.Add(new Binding("Command", DataContext, nameof(MainViewModel.AddCommand), true));
 
-            //button.DataBindings.Add(new Binding(nameof(Button.CommandParameter), DataContext, nameof(MainViewModel.FilePath)));
-
             return drawTrianglesBtn;
+        }
+
+        private ComboBox CreateColorComboBox()
+        {
+            var colors = Enum.GetValues(typeof(KnownColor)).Cast<KnownColor>().Select(x => x.ToString()).ToArray();
+            var comboBox = new ComboBox
+            {
+                Location = new Point(110, 100),
+                Width = 200
+            };
+            comboBox.Items.AddRange(colors);
+            comboBox.SelectedItem = _defaultColor.ToString();
+            comboBox.SelectedValueChanged += ComboBox_SelectedIndexChanged;
+
+            return comboBox;
         }
 
         private TextBox CreateFilePathTextBox()
@@ -174,6 +164,11 @@ namespace TaskTriangles.Views
             filePathTextBox.DataBindings.Add(new Binding(nameof(TextBox.Text), DataContext, nameof(MainViewModel.FilePath), true, DataSourceUpdateMode.OnPropertyChanged));
 
             return filePathTextBox;
+        }
+
+        private void ShowError(string message)
+        {
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

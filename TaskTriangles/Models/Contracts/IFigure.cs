@@ -3,6 +3,6 @@
     public interface IFigure
     {
         Point[] Points { get; set; }
-        int? Level { get; set; }
+        int? DepthLevel { get; set; }
     }
 }

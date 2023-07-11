@@ -47,7 +47,6 @@ namespace TaskTriangles.Views
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "TaskTriangles";
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.MainWindow_Paint);
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();
             this.ResumeLayout(false);
 
