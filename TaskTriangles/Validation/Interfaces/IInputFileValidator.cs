@@ -2,6 +2,7 @@
 {
     public interface IInputFileValidator
     {
-        Task<bool> ValidateInputFile(string filePath);
+        Task ValidateInputFile(string filePath);
+        void ValidateTrianglesCount(int trianglesCount);
     }
 }

@@ -51,7 +51,7 @@ namespace TaskTriangles
         private static void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<MainViewModel>();
-            services.AddTransient<IFigureService, FigureService>();
+            services.AddTransient<IFigureService, TriangleService>();
             services.AddTransient<IInputFileValidator, InputFileValidator>();
             services.AddTransient<ICoordinatesValidator, CoordinatesValidator>();
         }

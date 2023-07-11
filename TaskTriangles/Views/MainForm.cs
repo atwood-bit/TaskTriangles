@@ -50,10 +50,10 @@ namespace TaskTriangles.Views
                 .FirstOrDefault(x => x.ToString().Equals(_color), DEFAULT_COLOR);
             var color = Color.FromKnownColor(knownColor);
 
-            BackColor = color.ChangeColorBrightness(_appSettings.MaxRangeTransparency);
+            BackColor = color.ChangeColorBrightness(_appSettings.MaxRangeOfTransparency);
             foreach (var triangle in _triangles)
             {
-                var transparency = triangle.GetTransparency(_appSettings.MaxRangeTransparency, _appSettings.MinRangeTransparency, _transparencyStep);
+                var transparency = triangle.GetTransparency(_appSettings.MaxRangeOfTransparency, _appSettings.MinRangeOfTransparency, _transparencyStep);
                 e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), transparency);
             }
         }

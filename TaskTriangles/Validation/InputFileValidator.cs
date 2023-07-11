@@ -1,25 +1,42 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Options;
+using TaskTriangles.Exception;
+using TaskTriangles.Models;
 using TaskTriangles.Validation.Interfaces;
 
 namespace TaskTriangles.Validation
 {
     public class InputFileValidator : IInputFileValidator
     {
-        private const int MAX_COUNT_OF_TRIANGLES = 1000;
+        private readonly AppSettings _appSettings;
 
-        public async Task<bool> ValidateInputFile(string filePath)
+        public InputFileValidator(IOptions<AppSettings> options)
         {
-            var isExists = File.Exists(filePath);
-
-            return isExists && await ValidateTrianglesCount(filePath);
+            _appSettings = options.Value;
         }
 
-        private async Task<bool> ValidateTrianglesCount(string filePath)
+        public async Task ValidateInputFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException();
+            }
+            await ValidateTrianglesCount(filePath);
+        }
+
+        private async Task ValidateTrianglesCount(string filePath)
         {
             using var reader = new StreamReader(filePath);
             var trianglesCount = Convert.ToInt32(await reader.ReadLineAsync());
 
-            return trianglesCount > 0 && trianglesCount < MAX_COUNT_OF_TRIANGLES;
+            ValidateTrianglesCount(trianglesCount);
+        }
+
+        public void ValidateTrianglesCount(int trianglesCount)
+        {
+            if (trianglesCount <= _appSettings.MinCountOfTriangles || trianglesCount > _appSettings.MaxCountOfTriangles)
+            {
+                throw new IncorrectTrianglesCount(_appSettings.MaxCountOfTriangles, _appSettings.MinCountOfTriangles, trianglesCount);
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ namespace TaskTriangles.ViewModels
                 try
                 {
                     var result = await figureService.BuildTree(FilePath);
-                    result.CalculateTransparencyStep(settings.Value.MinRangeTransparency, settings.Value.MaxRangeTransparency);
+                    result.CalculateTransparencyStep(settings.Value.MinRangeOfTransparency, settings.Value.MaxRangeOfTransparency);
                     result.Color = Color;
                     WarningMessage = result.WarningMessage;
                     ResultMessage = BuildResultMessage(result);

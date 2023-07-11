@@ -4,13 +4,13 @@ using TaskTriangles.Validation.Interfaces;
 
 namespace TaskTriangles.Services
 {
-    public class FigureService : IFigureService
+    public class TriangleService : IFigureService
     {
         private readonly ICoordinatesValidator _triangleValidator;
         private readonly IInputFileValidator _inputFileValidator;
         private bool _isTrianglesIntersect = false;
 
-        public FigureService(ICoordinatesValidator triangleValidator, IInputFileValidator inputFileValidator)
+        public TriangleService(ICoordinatesValidator triangleValidator, IInputFileValidator inputFileValidator)
         {
             _triangleValidator = triangleValidator;
             _inputFileValidator = inputFileValidator;
@@ -27,6 +27,8 @@ namespace TaskTriangles.Services
                 .AsParallel()
                 .Select(MapLineToTrianglePoints)
                 .ToList();
+
+            _inputFileValidator.ValidateTrianglesCount(triangles.Count);
 
             if (declaredNumberTriangles != triangles.Count)
             {
@@ -125,13 +127,6 @@ namespace TaskTriangles.Services
             var vectorProductA = GetVectorProduct(trianglePoints[0], trianglePoints[1], point);
             var vectorProductB = GetVectorProduct(trianglePoints[1], trianglePoints[2], point);
             var vectorProductC = GetVectorProduct(trianglePoints[2], trianglePoints[0], point);
-            //var vectorProductA = GetVectorProduct
-            //    (trianglePoints[0].X - point.X,
-            //    trianglePoints[1].Y - trianglePoints[0].Y,
-            //    trianglePoints[1].X - trianglePoints[0].X,
-            //    trianglePoints[0].Y - point.Y);
-            //var vectorProductB = GetVectorProduct(trianglePoints[1].X - point.X, trianglePoints[2].Y - trianglePoints[1].Y, trianglePoints[2].X - trianglePoints[1].X, trianglePoints[1].Y - point.Y);
-            //var vectorProductC = GetVectorProduct(trianglePoints[2].X - point.X, trianglePoints[0].Y - trianglePoints[2].Y, trianglePoints[0].X - trianglePoints[2].X, trianglePoints[2].Y - point.Y);
 
             return new int[] { vectorProductA, vectorProductB, vectorProductC };
         }
