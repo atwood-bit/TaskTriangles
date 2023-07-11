@@ -2,12 +2,14 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using TaskTriangles.Commands;
+using TaskTriangles.Enums;
 using TaskTriangles.Models;
 using TaskTriangles.Services.Interfaces;
+using TaskTriangles.ViewModels.Interfaces;
 
 namespace TaskTriangles.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : INotifyPropertyChanged, IObservable
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -15,14 +17,8 @@ namespace TaskTriangles.ViewModels
         public string FilePath { get; set; }
         public string ResultMessage { get; set; }
         public string WarningMessage { get; set; } = string.Empty;
-
-        public delegate void AddItems(IEnumerable<Triangle> triangles);
-        public delegate void ShowError(string message);
-        //public delegate void AddTransparency(IEnumerable<KeyValuePair<int, double>> transparency);
-
-        public AddItems? AddItemsToViewCollection { get; set; }
-        //public AddTransparency? AddTransparencies { get; set; }
-        public ShowError? ShowErrorMessage { get; set; }
+        public string Color { get; set; } = string.Empty;
+        private List<IObserver> _observers { get; set; } = new();
 
         public MainViewModel(
             IFigureService figureService,
@@ -35,28 +31,38 @@ namespace TaskTriangles.ViewModels
                 try
                 {
                     var result = await figureService.BuildTree(FilePath);
+                    result.CalculateTransparencyStep(settings.Value.MinRangeTransparency, settings.Value.MaxRangeTransparency);
+                    result.Color = Color;
                     WarningMessage = result.WarningMessage;
                     ResultMessage = BuildResultMessage(result);
-                    //AddTransparencies?.Invoke(null);
-                    AddItemsToViewCollection?.Invoke(result.Items);
+                    NotifyObservers(result, NotifyAction.Success);
                 }
                 catch (System.Exception ex)
                 {
-                    ShowErrorMessage?.Invoke(ex.Message);
+                    NotifyObservers(ex.Message, NotifyAction.Error);
                 }
             });
+        }
+
+        public void RegisterObserver(IObserver o)
+        {
+            _observers.Add(o);
+        }
+
+        public void RemoveObserver(IObserver o)
+        {
+            _observers.Remove(o);
+        }
+
+        public void NotifyObservers(object obj, NotifyAction action)
+        {
+            _observers.ForEach(x => x.Update(obj, action));
         }
 
         private string BuildResultMessage(ResultModel? result)
         {
             var shadesCount = result is not null && result.IsTrianglesIntersect ? "Error" : (result?.ShadesCount ?? 0).ToString();
             return $"Triangles count = {result?.TrianglesCount ?? 0}\nShades count = {shadesCount}";
-        }
-
-        private void T(int shadesCount)
-        {
-
-            var q = new KeyValuePair<int, double>(1, 1.0);
         }
     }
 }

@@ -1,32 +1,41 @@
-using System.Collections.Immutable;
+using Microsoft.Extensions.Options;
 using System.Collections.Specialized;
+using TaskTriangles.Enums;
 using TaskTriangles.Extensions;
 using TaskTriangles.Models;
 using TaskTriangles.ViewModels;
+using TaskTriangles.ViewModels.Interfaces;
 
 namespace TaskTriangles.Views
 {
-    public partial class MainForm : Form
+    public partial class MainForm : Form, IObserver
     {
         private readonly RangeObservableCollection<Triangle> _triangles = new();
+        private readonly AppSettings _appSettings;
+
         private Panel? _drawPanel;
         private string _color;
-        private const KnownColor _defaultColor = KnownColor.MediumAquamarine;
-        //private readonly ImmutableDictionary<int, double> _transparencyByLevel = new ImmutableDictionary<int, double>();
+        private double _transparencyStep;
 
-        public MainForm(MainViewModel mainViewModel)
+        private const KnownColor DEFAULT_COLOR = KnownColor.MediumAquamarine;
+
+        public MainForm(MainViewModel mainViewModel, IOptions<AppSettings> settings)
         {
             InitializeComponent();
+            _appSettings = settings.Value;
 
-            mainViewModel.AddItemsToViewCollection = _triangles.AddRange;
-            mainViewModel.ShowErrorMessage = ShowError;
-            //mainViewModel.AddTransparencies = _transparencyByLevel.AddRange;
+            mainViewModel.RegisterObserver(this);
+            mainViewModel.Color = DEFAULT_COLOR.ToString();
             DataContext = mainViewModel;
             _color = string.Empty;
 
             CreateInputPanel();
             CreateDrawPanel();
 
+            FormClosed += (e, s) =>
+            {
+                mainViewModel.RemoveObserver(this);
+            };
             _triangles.CollectionChanged += PointsCollectionChanged;
         }
 
@@ -37,14 +46,15 @@ namespace TaskTriangles.Views
                 return;
             }
 
-            var knownColor = Enum.GetValues<KnownColor>().Cast<KnownColor>().FirstOrDefault(x => x.ToString().Equals(_color), _defaultColor);
+            var knownColor = Enum.GetValues<KnownColor>().Cast<KnownColor>()
+                .FirstOrDefault(x => x.ToString().Equals(_color), DEFAULT_COLOR);
             var color = Color.FromKnownColor(knownColor);
 
-            BackColor = color.ChangeColorBrightness(0.9);
+            BackColor = color.ChangeColorBrightness(_appSettings.MaxRangeTransparency);
             foreach (var triangle in _triangles)
             {
-                //_transparencyByLevel.TryGetValue(triangle.DepthLevel.Value, out var transparency);
-                e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), 0); // todo
+                var transparency = triangle.GetTransparency(_appSettings.MaxRangeTransparency, _appSettings.MinRangeTransparency, _transparencyStep);
+                e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), transparency);
             }
         }
 
@@ -53,24 +63,18 @@ namespace TaskTriangles.Views
             _drawPanel?.Invalidate();
         }
 
-        private void ComboBox_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            _color = comboBox?.SelectedItem?.ToString();
-        }
-
         private void CreateInputPanel()
         {
             var inputPanel = new Panel
             {
                 Width = 1000,
-                Height = 220,
+                Height = 180,
                 Dock = DockStyle.Top,
                 Location = new Point(10, 10),
                 BackColor = Color.Bisque
             };
 
-            inputPanel.Controls.Add(CreateFilePathTextBox());
+            inputPanel.Controls.AddRange(CreateFilePathTextBox());
             inputPanel.Controls.AddRange(CreateLabels());
 
             inputPanel.Controls.Add(CreateColorComboBox());
@@ -114,7 +118,7 @@ namespace TaskTriangles.Views
             {
                 Location = new Point(10, 100),
                 AutoSize = true,
-                Text = "Select color"
+                Text = "Select a color"
             };
 
             return new Label[] { resultMessageLabel, warningMessageLabel, selectColorLabel };
@@ -132,7 +136,6 @@ namespace TaskTriangles.Views
             drawTrianglesBtn.Click += (s, e) =>
             {
                 _triangles.Clear();
-                //_transparencyByLevel.Clear();
             };
             drawTrianglesBtn.DataBindings.Add(new Binding("Command", DataContext, nameof(MainViewModel.AddCommand), true));
 
@@ -147,28 +150,55 @@ namespace TaskTriangles.Views
                 Location = new Point(110, 100),
                 Width = 200
             };
+
             comboBox.Items.AddRange(colors);
-            comboBox.SelectedItem = _defaultColor.ToString();
-            comboBox.SelectedValueChanged += ComboBox_SelectedIndexChanged;
+            comboBox.DataBindings.Add(new Binding(nameof(ComboBox.SelectedItem), DataContext, nameof(MainViewModel.Color), true, DataSourceUpdateMode.OnPropertyChanged));
 
             return comboBox;
         }
 
-        private TextBox CreateFilePathTextBox()
+        private Control[] CreateFilePathTextBox()
         {
-            var filePathTextBox = new TextBox
+            var filePathLabel = new Label
             {
                 Location = new Point(10, 10),
-                Size = new Size(400, 30),
+                Size = new Size(100, 30),
+                Text = "Path to file"
+            };
+
+            var filePathTextBox = new TextBox
+            {
+                Location = new Point(90, 10),
+                Size = new Size(600, 30),
             };
             filePathTextBox.DataBindings.Add(new Binding(nameof(TextBox.Text), DataContext, nameof(MainViewModel.FilePath), true, DataSourceUpdateMode.OnPropertyChanged));
 
-            return filePathTextBox;
+            return new Control[] { filePathTextBox, filePathLabel };
         }
 
-        private void ShowError(string message)
+        private void ShowError(string? message)
         {
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        public void Update(object model, NotifyAction action)
+        {
+            if (model is null) return;
+
+            switch (action)
+            {
+                case NotifyAction.Success:
+                    if (model is ResultModel result)
+                    {
+                        _transparencyStep = result.TransparencyStepByLevel;
+                        _color = result.Color;
+                        _triangles.AddRange(result.Items);
+                    }
+                    break;
+                case NotifyAction.Error:
+                    ShowError(model.ToString());
+                    break;
+            }
         }
     }
 }

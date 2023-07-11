@@ -23,5 +23,12 @@ namespace TaskTriangles.Models
         {
             return base.GetHashCode();
         }
+
+        public double GetTransparency(double maxRangeValue, double minRangeValue, double stepValue)
+        {
+            var transparency = maxRangeValue - DepthLevel.Value * stepValue;
+
+            return transparency > minRangeValue ? transparency : minRangeValue;
+        }
     }
 }
