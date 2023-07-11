@@ -106,16 +106,14 @@ namespace TaskTriangles.Services
             var isTriangleNestedInAnother = false;
             for (int i = 0; i < first.Points.Length; i++)
             {
-                var pointA = first.Points[i];
-                var vectorProductsPointA = CalculateVectorProducts(pointA, second.Points);
+                var vectorProducts = CalculateVectorProducts(first.Points[i], second.Points);
 
-                isTriangleNestedInAnother = IsAllVectorProductsPositiveOrNegative(vectorProductsPointA);
+                isTriangleNestedInAnother = IsAllVectorProductsPositiveOrNegative(vectorProducts);
 
                 if (!_isTrianglesIntersect)
                 {
-                    var nextI = (i + 1) % first.Points.Length;
-                    var pointB = first.Points[nextI];
-                    CheckIsTriangleSegmentIntersectWithAnother(vectorProductsPointA, pointB, second);
+                    var nextPointIndex = (i + 1) % first.Points.Length;
+                    IsSegmentsIntersect(first.Points[i], first.Points[nextPointIndex], second.Points[i], second.Points[nextPointIndex]);
                 }
             }
 
@@ -146,10 +144,11 @@ namespace TaskTriangles.Services
             return vectorProducts.All(x => x > 0) || vectorProducts.All(x => x < 0);
         }
 
-        private void CheckIsTriangleSegmentIntersectWithAnother(int[] vectorProductsPointA, Point pointB, Triangle triangle)
+        private void IsSegmentsIntersect(Point firstPointA, Point firstPointB, Point secondPointA, Point secondPointB)
         {
-            var vectorProductsPointB = CalculateVectorProducts(pointB, triangle.Points);
-            _isTrianglesIntersect = vectorProductsPointA.All(x => x <= 0) && vectorProductsPointB.All(x => x <= 0);
+            _isTrianglesIntersect = 
+                GetVectorProduct(firstPointA, firstPointB, secondPointA) * GetVectorProduct(firstPointA, firstPointB, secondPointB) <= 0 &&
+                GetVectorProduct(secondPointA, secondPointB, firstPointA) * GetVectorProduct(secondPointA, secondPointB, firstPointB) <= 0;
         }
     }
 }

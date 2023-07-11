@@ -61,8 +61,8 @@ namespace TaskTriangles.ViewModels
 
         private string BuildResultMessage(ResultModel? result)
         {
-            var shadesCount = result is not null && result.IsTrianglesIntersect ? "Error" : (result?.ShadesCount ?? 0).ToString();
-            return $"Triangles count = {result?.TrianglesCount ?? 0}\nShades count = {shadesCount}";
+            var shadesCount = result is not null && result.IsTrianglesIntersect ? "Error" : (result?.ShadesCount + 1 ?? 0).ToString();
+            return $"Triangles count = {result?.TrianglesCount ?? 0}\nShades count (includes rectangle) = {shadesCount}";
         }
     }
 }

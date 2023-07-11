@@ -50,11 +50,11 @@ namespace TaskTriangles.Views
                 .FirstOrDefault(x => x.ToString().Equals(_color), DEFAULT_COLOR);
             var color = Color.FromKnownColor(knownColor);
 
-            BackColor = color.ChangeColorBrightness(_appSettings.MaxRangeOfTransparency);
+            (sender as Panel).BackColor = color.ChangeColorBrightness(_appSettings.MaxRangeOfTransparency);
             foreach (var triangle in _triangles)
             {
                 var transparency = triangle.GetTransparency(_appSettings.MaxRangeOfTransparency, _appSettings.MinRangeOfTransparency, _transparencyStep);
-                e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), transparency);
+                e.Graphics.FillTriangle(triangle.Points, Color.FromKnownColor(knownColor), transparency, true);
             }
         }
 
@@ -91,6 +91,7 @@ namespace TaskTriangles.Views
                 Width = 1000,
                 Height = 1000,
                 Location = new Point(10, 220),
+                BorderStyle = BorderStyle.FixedSingle,
             };
 
             drawPanel.Paint += new PaintEventHandler(DrawPanel_Paint);
